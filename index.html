@@ -30,7 +30,6 @@
       --color-crimson: #f87171;
       --font-detective: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
       --font-code: ui-monospace, Menlo, Monaco, "Courier New", monospace;
-      --command-safe-height: 64px;
     }
 
     * {
@@ -45,7 +44,7 @@
       color: var(--text-main);
       font-family: var(--font-detective);
       line-height: 1.6;
-      padding-bottom: calc(var(--command-safe-height) + 24px);
+      padding-bottom: 32px;
       min-height: 100vh;
       /* 英国レンガ調・羊皮紙のグラデーション */
       background-image: 
@@ -377,48 +376,6 @@
       border-radius: 6px;
       font-size: 13.5px;
       color: var(--text-parchment);
-    }
-
-    /* 下部コマンドバー（固定） */
-    .command-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: var(--command-safe-height);
-      background: rgba(36, 22, 15, 0.96);
-      backdrop-filter: blur(8px);
-      border-top: 2px solid var(--border-brass);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      z-index: 1000;
-    }
-
-    .cmd-btn {
-      flex: 1;
-      max-width: 150px;
-      height: 46px;
-      background: #24160f;
-      border: 1px solid var(--border-brass);
-      color: var(--text-main);
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      transition: all 0.15s;
-    }
-
-    .cmd-btn:hover {
-      background: #3d2516;
-      border-color: var(--border-brass-light);
-      color: var(--color-gold);
     }
 
     /* トースト通知 */
@@ -1082,25 +1039,6 @@
 
   <!-- トースト通知 -->
   <div id="toast" role="alert" aria-live="assertive"></div>
-
-  <!-- 下部固定コマンドバー（探偵仕様） -->
-  <footer class="command-bar no-print">
-    <button class="cmd-btn" id="cmd-video" type="button">
-      🎬 事件ファイル
-    </button>
-    <button class="cmd-btn" id="cmd-gadget" type="button">
-      🔍 秘密道具
-    </button>
-    <button class="cmd-btn" id="cmd-mod" type="button">
-      🔧 改造ラボ
-    </button>
-    <button class="cmd-btn" id="cmd-lab" type="button">
-      💡 秘密工房
-    </button>
-    <button class="cmd-btn" id="cmd-report" type="button">
-      📜 捜査報告書
-    </button>
-  </footer>
 
   <!-- ====================================================================
        スクリプトコア（全データ・ロジック・音響）
@@ -1805,13 +1743,6 @@
         document.getElementById('gemini-brainstorm-box').value = INITIAL_BRAINSTORM_PROMPT;
         showToast("🔄 壁打ちひな形に復活させました！");
       });
-
-      // 下部固定コマンドバー
-      document.getElementById('cmd-video').addEventListener('click', () => switchStage(0));
-      document.getElementById('cmd-gadget').addEventListener('click', () => switchStage(1));
-      document.getElementById('cmd-mod').addEventListener('click', () => switchStage(2));
-      document.getElementById('cmd-lab').addEventListener('click', () => switchStage(3));
-      document.getElementById('cmd-report').addEventListener('click', () => switchStage(5));
     });
   </script>
 </body>
