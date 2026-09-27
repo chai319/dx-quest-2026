@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>【スライド】名探偵の秘密道具を作れ！ 〜Gemini Canvas ガジェット開発クエスト〜</title>
+  <style>
+    :root {
+      --bg-brick: #1a0f0a;
+      --bg-surface: #24160f;
+      --border-brass: #c59b27;
+      --border-brass-light: #e5c158;
+      --text-main: #fbf6ec;
+      --text-parchment: #e8dcce;
+      --text-muted: #bda895;
+      --color-gold: #e5c158;
+      --color-amber: #d97706;
+      --color-cyan: #38bdf8;
+      --color-green: #34d399;
+      --color-crimson: #f87171;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #110905;
+      color: var(--text-main);
+      font-family: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      gap: 24px;
+    }
+
+    /* 16:9 スライド枠 */
+    .slide {
+      width: 1000px;
+      height: 562.5px; /* 16:9 */
+      background: var(--bg-surface);
+      border: 3px solid var(--border-brass);
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(197, 155, 39, 0.15);
+      position: relative;
+      padding: 36px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      page-break-after: always;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      top: 6px; left: 6px; right: 6px; bottom: 6px;
+      border: 1px solid rgba(197, 155, 39, 0.3);
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .slide-header {
+      border-bottom: 2px dashed var(--border-brass);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .slide-title {
+      font-size: 26px;
+      font-weight: bold;
+      color: var(--color-gold);
+    }
+
+    .slide-number {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: bold;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      gap: 24px;
+      font-size: 16.5px;
+      line-height: 1.8;
+      color: var(--text-parchment);
+    }
+
+    .slide-content-left {
+      flex: 1.2;
+    }
+
+    .slide-content-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #190f09;
+      border: 1px solid var(--border-brass);
+      border-radius: 8px;
+      overflow: hidden;
+      padding: 6px;
+    }
+
+    .slide-content-right img {
+      max-width: 100%;
+      max-height: 280px;
+      border-radius: 4px;
+      object-fit: contain;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: bold;
+      background: var(--color-gold);
+      color: #24160f;
+      margin-right: 6px;
+    }
+
+    .highlight-box {
+      background: rgba(197, 155, 39, 0.15);
+      border-left: 4px solid var(--color-gold);
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin: 10px 0;
+      font-size: 15px;
+    }
+
+    .speaker-notes {
+      width: 1000px;
+      background: #2a1b12;
+      border: 1px solid #4a3222;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #e5d5c5;
+      margin-top: -12px;
+      margin-bottom: 20px;
+    }
+
+    .speaker-notes strong {
+      color: var(--color-gold);
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .speaker-notes { display: none; }
+      .slide {
+        border: 1px solid #000;
+        box-shadow: none;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       SLIDE 1: 表紙
+       ========================================== -->
+  <div class="slide" id="slide-1" style="justify-content: center; align-items: center; text-align: center;">
+    <div style="font-size: 14px; color: var(--color-gold); letter-spacing: 2px; font-weight: bold; margin-bottom: 8px;">
+      🕵️‍♂️ 2026.09.30 高校1年 DX実習（50分一本勝負）
+    </div>
+    <h1 style="font-size: 38px; color: var(--color-gold); margin-bottom: 12px; line-height: 1.3;">
+      名探偵の秘密道具を作れ！
+    </h1>
+    <h2 style="font-size: 20px; color: var(--text-parchment); font-weight: normal; margin-bottom: 28px;">
+      〜ベーカー街221B Gemini Canvas ガジェット開発クエスト〜
+    </h2>
+    <div style="font-size: 15px; color: var(--text-muted); line-height: 1.6;">
+      滋賀県立河瀬高等学校 ｜ 担当：情報科・総合的な探究の時間<br>
+      生成AIと創る「自分の言葉で動く」バイブコーディング実習
+    </div>
+  </div>
+  <div class="speaker-notes">
+    <strong>🎙️ スピーカーノート（ナレーション）:</strong><br>
+    「みなさん、こんにちは！今日のDX実習へようこそ。前回の授業では『桃鉄』や『RESAS』を使って、社会のデータに触れる体験をしましたね。でも今日のテーマは違います。今日は【データを使う側】から【道具を作る側】へと進化します！生成AIの相棒・Geminiと一緒に、自分の言葉で動くオリジナルの秘密道具を開発していきましょう！」
+  </div>
+
+
+  <!-- ==========================================
+       SLIDE 2: 本日のミッション＆50分の流れ
+       ========================================== -->
+  <div class="slide" id="slide-2">
+    <div class="slide-header">
+      <div class="slide-title">🎯 本日のミッション＆50分の流れ</div>
+      <div class="slide-number">Slide 2 / 7</div>
+    </div>
+    <div class="slide-body">
+      <div class="slide-content-left" style="flex: 1;">
+        <div class="highlight-box">
+          <strong>【本日の主目標】</strong><br>
+          「自分の言葉で、使える道具を作り、動作を確かめて修正できる」体験！<br>
+          ※プログラミングの呪文を丸暗記する必要はありません。
+        </div>
+        <div style="margin-top: 12px; display: grid; gap: 6px; font-size: 15px;">
+          <div><span class="badge">0〜5分</span> 🎬 事件ファイル（説明動画・実演）</div>
+          <div><span class="badge">5〜15分</span> ① 8大秘密道具から1本選んで動かす</div>
+          <div><span class="badge">15〜20分</span> ② 自分の言葉で1か所変えてみる（武器強化）</div>
+          <div><span class="badge">20〜23分</span> 自作テーマ決定（新作でも改造でもOK）</div>
+          <div><span class="badge">23〜40分</span> ③ 秘密工房でオリジナル制作（※37分機能追加終了）</div>
+          <div><span class="badge">40〜47分</span> ④ 現場検証・友達と端末交代ミニ体験会</div>
+          <div><span class="badge">47〜50分</span> ⑤ 捜査報告書（Googleフォーム提出）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="speaker-notes">
+    <strong>🎙️ スピーカーノート（ナレーション）:</strong><br>
+    「今日の目標は、プログラミングの難しいコードを丸暗記することではありません。大切なのは『自分の日本語でお願いし、動く道具を作り、試して修正する』というバイブコーディングの感覚を掴むことです。授業は5つのステージで進みます。最初は用意された道具を動かすところからスタートし、後半は自分だけの道具作りに挑戦します。難しい知識は一切不要です！」
+  </div>
+
+
+  <!-- ==========================================
+       SLIDE 3: 進行サイトの紹介
+       ========================================== -->
+  <div class="slide" id="slide-3">
+    <div class="slide-header">
+      <div class="slide-title">💻 捜査を導く「進行サイト」の紹介</div>
+      <div class="slide-number">Slide 3 / 7</div>
+    </div>
+    <div class="slide-body">
+      <div class="slide-content-left">
+        <p style="margin-bottom: 12px;">iPadで開いている「進行サイト」を使って捜査を進めよう！</p>
+        <ul style="padding-left: 20px; display: grid; gap: 8px; font-size: 15px;">
+          <li><strong>上部ステージナビ</strong>：①〜⑤のステージをワンタップで切替</li>
+          <li><strong>💡 ひらめきポイント</strong>：プロンプトコピーで消費（復活可能）</li>
+          <li><strong>プロンプト直接編集枠</strong>：枠内の［かっこ］や数値を直接書き換え！</li>
+          <li><strong>🔄 ひらめき復活ボタン</strong>：誤って消しても初期ひな形へ一発復元！</li>
+          <li><strong>動作確認チェックリスト</strong>：動いた後に試すポイントが一目でわかる</li>
+        </ul>
+      </div>
+      <div class="slide-content-right">
+        <img src="ss_top_stage0.png" alt="進行サイト トップ画面">
+        <div style="font-size: 12px; color: var(--color-gold); margin-top: 4px;">進行サイト トップ画面（ベーカー街221B）</div>
+      </div>
+    </div>
+  </div>
+  <div class="speaker-notes">
+    <strong>🎙️ スピーカーノート（ナレーション）:</strong><br>
+    「みんなの手元のiPadには、この『進行サイト』が開かれています。上のタブを押すと、ステージごとに必要な情報やプロンプトが表示されます。画面の枠の中で文章を直接書き換えることもできますし、もし間違えて消してしまっても大丈夫。青い『ひらめき復活ボタン』を押せば、いつでも初期状態に戻せますので安心して触ってくださいね。」
+  </div>
+
+
+  <!-- ==========================================
+       SLIDE 4: 【最重要】Canvas機能をオンにする！
+       ========================================== -->
+  <div class="slide" id="slide-4">
+    <div class="slide-header">
+      <div class="slide-title">⚠️ 【最重要】Geminiの「Canvas機能」をオンにする！</div>
+      <div class="slide-number">Slide 4 / 7</div>
+    </div>
+    <div class="slide-body">
+      <div class="slide-content-left">
+        <div class="highlight-box" style="border-color: var(--color-crimson); background: rgba(248, 113, 113, 0.15);">
+          <strong>ここを忘れるとアプリが動きません！</strong><br>
+          普通のチャットの文章が返ってくるだけになってしまいます。
+        </div>
+        <ol style="padding-left: 20px; display: grid; gap: 8px; font-size: 15px; margin-top: 8px;">
+          <li>サイトの「🚀 Geminiを開く (別タブ)」をタップ</li>
+          <li>画面の入力欄やメニューにある<strong>「Canvas」アイコンをクリックして【ON】</strong>にする</li>
+          <li>コピーしたプロンプトを貼り付けて送信（紙飛行機）</li>
+          <li><strong>➔ 画面右半分に、実際に動くWebアプリが出現！</strong></li>
+        </ol>
+      </div>
+      <div class="slide-content-right">
+        <img src="ss_stage1_prompt_canvas.png" alt="Canvasオンの案内">
+        <div style="font-size: 12px; color: var(--color-cyan); margin-top: 4px;">ボタン横の「⚠️ *Canvas機能をオンにすること」を目印に！</div>
+      </div>
+    </div>
+  </div>
+  <div class="speaker-notes">
+    <strong>🎙️ スピーカーノート（ナレーション）:</strong><br>
+    「ここが今日、一番大事なポイントです！画面をよく見てください。Geminiを開いたら、必ず【Canvas機能】をオンにしてください！このCanvasスイッチがオンになっていないと、普通のチャットの文章だけが返ってきてしまい、動くアプリが立ち上がりません。『Canvasがオンになっているか？』をしっかり確認してから、コピーしたプロンプトを貼り付けて送信しましょう！」
+  </div>
+
+
+  <!-- ==========================================
+       SLIDE 5: STAGE 1 & 2：道具を動かして1か所変える
+       ========================================== -->
+  <div class="slide" id="slide-5">
+    <div class="slide-header">
+      <div class="slide-title">🔍 STAGE 1 & 2：まずは動かして「1か所」変えてみる</div>
+      <div class="slide-number">Slide 5 / 7</div>
+    </div>
+    <div class="slide-body">
+      <div class="slide-content-left">
+        <div style="font-size: 14.5px; line-height: 1.6;">
+          <strong>【STAGE 1】8大秘密道具から1つ選ぶ（5〜15分）</strong>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 13px; margin: 6px 0 10px;">
+            <div>⏱️ 10秒体内時計時計</div>
+            <div>🎲 証拠確率1%ガチャ</div>
+            <div>🧠 ストループ心理テスト</div>
+            <div>🧪 メタン燃焼モル鑑定器</div>
+            <div>🧬 DNA転写・翻訳</div>
+            <div>📈 関数＆接線スコープ</div>
+            <div>📷 鑑識カメラRGB</div>
+            <div>🎙️ 音紋オシロスコープ</div>
+          </div>
+          <strong>【STAGE 2】同じチャットで「1か所」改造（15〜20分）</strong>
+          <p style="font-size: 13.5px; color: var(--text-parchment);">
+            「制限時間を半分にして」「デザインを英国風にして」など、自分の言葉で指示を出す！
+          </p>
+        </div>
+      </div>
+      <div class="slide-content-right">
+        <img src="ss_stage1_gadgets.png" alt="8大秘密道具カード一覧">
+        <div style="font-size: 12px; color: var(--color-gold); margin-top: 4px;">横並びカードで瞬時に切り替え可能</div>
+      </div>
+    </div>
+  </div>
+  <div class="speaker-notes">
+    <strong>🎙️ スピーカーノート（ナレーション）:</strong><br>
+    「まずはステージ1。理科や数学、心理学など、高校生のみんなが面白いと思える8種類の道具を用意しました。迷ったら定番の『10秒体内時計』か『化学モル計算』がオススメです。プロンプトをコピーしてCanvasに送信すると、数秒で動く道具が完成します。アプリが動いたら、同じチャットで『ルールを厳しくして』とか『デザインをかっこよくして』と、自分の言葉で1か所だけ変えてみましょう。自分の言葉通りにアプリが書き換わる驚きを体験してください！」
+  </div>
+
+
+  <!-- ==========================================
+       SLIDE 6: STAGE 3：秘密工房・オリジナル道具の錬成
+       ========================================== -->
+  <div class="slide" id="slide-6">
+    <div class="slide-header">
+      <div class="slide-title">💡 STAGE 3：秘密工房・オリジナル道具の錬成</div>
+      <div class="slide-number">Slide 6 / 7</div>
+    </div>
+    <div class="slide-body">
+      <div class="slide-content-left" style="flex: 1;">
+        <p style="margin-bottom: 8px;">自分のアイデアを形にする時間！（20〜40分）※前半の道具の改造でもOK！</p>
+        <div class="highlight-box">
+          <strong>💡 ラテラル（水平思考）な発想ヒント（開閉アコーディオン）</strong><br>
+          🕵️ 容疑者アリバイ生成機 ／ 🔐 シーザー暗号メモ ／ 💓 嘘発見器 ／ 🚨 音量デシベルセンサー ／ 🎯 3問犯人当てクイズ ／ 🎒 登校持ち物チェッカー など
+        </div>
+        <div class="highlight-box" style="border-color: var(--color-cyan); background: rgba(56, 189, 248, 0.12);">
+          <strong>🤖 相棒Geminiとの発想壁打ち</strong><br>
+          迷ったら「発想壁打ちプロンプト」をGeminiに送れば、面白いアイデアを3つ提案してくれる！
+        </div>
+        <div style="color: var(--color-crimson); font-weight: bold; font-size: 14.5px; margin-top: 6px;">
+          ⚠️ 37分で機能追加をストップし、体験会の準備に入ろう！
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="speaker-notes">
+    <strong>🎙️ スピーカーノート（ナレーション）:</strong><br>
+    「ステージ3は、いよいよ自分だけのオリジナル道具を作る工房です。友達に出題するミステリークイズや、忘れ物をなくすチェッカーなど、自由な発想で作ってみましょう。『何を作ればいいか思いつかない…』という人は、進行サイトにある『発想壁打ちプロンプト』を使って、Gemini自身にアイデアを出してもらいましょう。相棒のワトソンのように頼もしく相談に乗ってくれますよ。ただし、夢中になりすぎて時間を忘れないように！37分になったら機能追加を止めて、体験会の準備に入りましょう。」
+  </div>
+
+
+  <!-- ==========================================
+       SLIDE 7: STAGE 4 & 5：現場検証（体験会）＆ 報告書提出
+       ========================================== -->
+  <div class="slide" id="slide-7">
+    <div class="slide-header">
+      <div class="slide-title">📜 STAGE 4 & 5：現場検証（体験会）＆ 報告書提出</div>
+      <div class="slide-number">Slide 7 / 7</div>
+    </div>
+    <div class="slide-body">
+      <div class="slide-content-left" style="flex: 1;">
+        <div style="display: grid; gap: 12px;">
+          <div class="highlight-box">
+            <strong>【STAGE 4】現場検証・友達と端末交代ミニ体験会（40〜47分）</strong><br>
+            ・公開リンクは不要！ お互いのiPadをそのまま交代して操作！<br>
+            ・「これは［誰］が［何］をする道具です」と1文で説明<br>
+            ・良かった点と、改善アイデアを1つずつ伝え合う！
+          </div>
+          <div class="highlight-box" style="border-color: var(--color-green); background: rgba(52, 211, 153, 0.15);">
+            <strong>【STAGE 5】捜査報告書提出（47〜50分）</strong><br>
+            ・進行サイト下部の「Googleフォーム」に回答して送信するだけ！<br>
+            ・<strong>※スクリーンショットの提出は不要です。</strong>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 14px; font-size: 18px; color: var(--color-gold); font-weight: bold;">
+          🕵️‍♂️ それでは名探偵諸君、事件解決に向けて秘密道具の開発をスタートせよ！
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="speaker-notes">
+    <strong>🎙️ スピーカーノート（ナレーション）:</strong><br>
+    「最後はステージ4と5です。道具ができたら、隣の友達とお互いのiPadを交換して使い合ってみましょう。リンクの共有などは不要です。そのままiPadを渡して、『ここを押してみて！』と触ってもらいましょう。『ここが使いやすかった！』『ここをこう直すともっと面白い！』とフィードバックを伝え合ってください。最後に、進行サイトのステージ5にあるGoogleフォームから振り返りを送信すれば、本日の捜査任務は完了です。それでは、名探偵諸君！事件解決に向けて、最高の秘密道具を作り出してください。スタートです！」
+  </div>
+
+</body>
+</html>

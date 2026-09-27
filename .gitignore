@@ -1,0 +1,13 @@
+*.json
+*.bak*
+*.py
+HANDOFF_TO_SAE.md
+lesson-plan.md
+teacher-checklist.md
+student-guide.md
+review-decisions.md
+emo-review.md
+2026-09-27_daily-report-entry.md
+SLIDE_SCRIPT_FOR_VIDES.md
+gas_slide_builder/
+.clasp.json

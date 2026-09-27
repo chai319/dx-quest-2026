@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>名探偵の秘密道具を作れ！ 〜ベーカー街221B Gemini Canvas ガジェット開発クエスト〜</title>
+  <style>
+    /* ==========================================================================
+       シャーロック・探偵ヴィンテージ・デザインシステム
+       英国調クラシック・マホガニー＆アンティークブラス
+       ========================================================================== */
+    :root {
+      --bg-brick: #1a0f0a;
+      --bg-base: #24160f;
+      --bg-surface: #2e1c13;
+      --bg-card: #382419;
+      --bg-card-hover: #483022;
+      --bg-card-selected: #523726;
+      --bg-terminal: #150c07;
+      --border-brass: #c59b27;
+      --border-brass-light: #e5c158;
+      --border-dark: #4a3222;
+      --text-main: #fbf6ec;
+      --text-parchment: #e8dcce;
+      --text-muted: #bda895;
+      --color-gold: #e5c158;
+      --color-amber: #d97706;
+      --color-cyan: #38bdf8;
+      --color-green: #34d399;
+      --color-crimson: #f87171;
+      --font-detective: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      --font-code: ui-monospace, Menlo, Monaco, "Courier New", monospace;
+      --command-safe-height: 64px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-brick);
+      color: var(--text-main);
+      font-family: var(--font-detective);
+      line-height: 1.6;
+      padding-bottom: calc(var(--command-safe-height) + 24px);
+      min-height: 100vh;
+      /* 英国レンガ調・羊皮紙のグラデーション */
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(197, 155, 39, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 85% 85%, rgba(217, 119, 6, 0.06) 0%, transparent 30%),
+        linear-gradient(180deg, #1c100a 0%, #24160f 50%, #1a0f0a 100%);
+    }
+
+    /* 探偵の羊皮紙＆真鍮枠ボックス */
+    .sherlock-box {
+      background: var(--bg-surface);
+      border: 2px solid var(--border-brass);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(197, 155, 39, 0.1);
+      position: relative;
+    }
+
+    .sherlock-box::before {
+      content: "";
+      position: absolute;
+      top: 3px; left: 3px; right: 3px; bottom: 3px;
+      border: 1px solid rgba(197, 155, 39, 0.25);
+      border-radius: 5px;
+      pointer-events: none;
+    }
+
+    .sherlock-box-header {
+      font-size: 1.15rem;
+      font-weight: bold;
+      color: var(--color-gold);
+      border-bottom: 1px dashed var(--border-brass);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* 汎用ボタン */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background-color: #3d261a;
+      color: var(--text-main);
+      border: 1px solid var(--border-brass);
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      min-height: 44px;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background-color: #4e3223;
+      border-color: var(--border-brass-light);
+      color: var(--color-gold);
+      box-shadow: 0 0 10px rgba(229, 193, 88, 0.25);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-gold {
+      background: linear-gradient(180deg, #4d3319 0%, #362211 100%);
+      border-color: var(--border-brass);
+      color: var(--color-gold);
+    }
+
+    .btn-gold:hover {
+      background: linear-gradient(180deg, #5e3f1e 0%, #442b15 100%);
+      border-color: var(--border-brass-light);
+      color: #fff;
+    }
+
+    .btn-cyan {
+      background: #1e334a;
+      border-color: #38bdf8;
+      color: #bae6fd;
+    }
+
+    .btn-cyan:hover {
+      background: #284463;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-reset {
+      border-color: #94a3b8;
+      color: #cbd5e1;
+      background: rgba(148, 163, 184, 0.1);
+    }
+
+    .btn-reset:hover {
+      background: rgba(148, 163, 184, 0.25);
+      border-color: #ffffff;
+      color: #ffffff;
+    }
+
+    .btn-green {
+      background: #143e2e;
+      border-color: var(--color-green);
+      color: #a7f3d0;
+    }
+
+    .btn-green:hover {
+      background: #1b533e;
+      color: #fff;
+    }
+
+    /* バッジ */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .badge-gold { background: var(--color-gold); color: #24160f; }
+    .badge-amber { background: var(--color-amber); color: #fff; }
+    .badge-cyan { background: var(--color-cyan); color: #000; }
+    .badge-green { background: var(--color-green); color: #000; }
+
+    /* ヘッダー・ステータスバー */
+    header {
+      background: rgba(36, 22, 15, 0.96);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 2px solid var(--border-brass);
+      padding: 10px 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+      max-width: 1000px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .status-gauges {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: #1d110b;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-dark);
+    }
+
+    .gauge-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .gauge-bar-outer {
+      width: 70px;
+      height: 10px;
+      background: #3d2417;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid #5a3824;
+    }
+
+    .gauge-bar-inner {
+      height: 100%;
+      background: var(--color-green);
+      transition: width 0.3s;
+    }
+
+    /* ナビゲーションバー（6ステージ展開） */
+    .stage-nav {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      max-width: 1000px;
+      margin: 0 auto 6px;
+    }
+
+    .stage-nav-btn {
+      background: #1e120a;
+      border: 1px solid var(--border-dark);
+      color: var(--text-muted);
+      padding: 8px 4px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      min-height: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      line-height: 1.2;
+      transition: all 0.2s;
+    }
+
+    .stage-nav-btn:hover {
+      border-color: var(--border-brass);
+      color: var(--color-gold);
+    }
+
+    .stage-nav-btn.active {
+      background: #3d2516;
+      border-color: var(--border-brass-light);
+      color: var(--color-gold);
+      box-shadow: 0 0 10px rgba(229, 193, 88, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .stage-nav {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* 横並びカードグリッド（四天王・探偵ガジェット風） */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+
+    .gadget-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border-dark);
+      border-radius: 8px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .gadget-card:hover {
+      border-color: var(--border-brass);
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .gadget-card.selected {
+      border-color: var(--border-brass-light);
+      background: var(--bg-card-selected);
+      box-shadow: 0 0 14px rgba(229, 193, 88, 0.3);
+    }
+
+    .gadget-card-title {
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: var(--color-gold);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .gadget-card-desc {
+      font-size: 13.5px;
+      color: var(--text-parchment);
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    /* プロンプト編集枠（textarea） */
+    .prompt-box {
+      width: 100%;
+      min-height: 180px;
+      background: var(--bg-terminal);
+      color: #fde68a;
+      font-family: var(--font-code);
+      font-size: 14px;
+      line-height: 1.6;
+      border: 2px solid var(--border-brass);
+      border-radius: 6px;
+      padding: 12px;
+      margin: 10px 0;
+      resize: vertical;
+    }
+
+    .prompt-box:focus {
+      outline: none;
+      border-color: var(--border-brass-light);
+      box-shadow: 0 0 10px rgba(229, 193, 88, 0.3);
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 10px 0 14px;
+    }
+
+    /* チェックリスト */
+    .check-list {
+      list-style: none;
+      display: grid;
+      gap: 6px;
+      margin: 10px 0;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #24160f;
+      border: 1px solid var(--border-dark);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13.5px;
+      color: var(--text-parchment);
+    }
+
+    /* 下部コマンドバー（固定） */
+    .command-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: var(--command-safe-height);
+      background: rgba(36, 22, 15, 0.96);
+      backdrop-filter: blur(8px);
+      border-top: 2px solid var(--border-brass);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      z-index: 1000;
+    }
+
+    .cmd-btn {
+      flex: 1;
+      max-width: 150px;
+      height: 46px;
+      background: #24160f;
+      border: 1px solid var(--border-brass);
+      color: var(--text-main);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .cmd-btn:hover {
+      background: #3d2516;
+      border-color: var(--border-brass-light);
+      color: var(--color-gold);
+    }
+
+    /* トースト通知 */
+    #toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #3d2516;
+      color: var(--color-gold);
+      border: 2px solid var(--border-brass);
+      border-radius: 6px;
+      padding: 10px 20px;
+      font-size: 14.5px;
+      font-weight: bold;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    #toast.show {
+      opacity: 1;
+    }
+
+    /* レスポンシブ動画コンテナ（16:9） */
+    .video-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 */
+      height: 0;
+      background: #110905;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-brass);
+      margin: 10px 0;
+    }
+
+    .video-container iframe,
+    .video-container video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .video-placeholder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #24160f 0%, #170d08 100%);
+      color: var(--color-gold);
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* Googleフォーム埋め込みコンテナ */
+    .form-container {
+      width: 100%;
+      height: 650px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid var(--border-brass);
+      margin: 12px 0;
+    }
+
+    .form-container iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    /* 開閉アコーディオン詳細 */
+    details.sherlock-accordion {
+      background: #24160f;
+      border: 1px solid var(--border-brass);
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 12px 0;
+    }
+
+    details.sherlock-accordion summary {
+      cursor: pointer;
+      color: var(--color-gold);
+      font-weight: bold;
+      font-size: 14px;
+      user-select: none;
+      outline: none;
+    }
+
+    details.sherlock-accordion summary:hover {
+      color: var(--border-brass-light);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ====================================================================
+       ヘッダー（ベーカー街221B・ステータス＆ステージナビ）
+       ==================================================================== -->
+  <header>
+    <div class="header-bar">
+      <div>
+        <div style="font-size: 11px; color: var(--color-gold); font-weight: bold; letter-spacing: 1px;">
+          🕵️‍♂️ ベーカー街221B 秘密ガジェット開発所 ｜ 高校1年 DX実習（50分）
+        </div>
+        <h1 style="font-size: 1.25rem; font-weight: bold; color: var(--color-gold); margin-top: 2px;">
+          名探偵の秘密道具を作れ！ <span style="font-size: 13px; color: var(--text-parchment); font-weight: normal;">〜Gemini Canvas ガジェット開発クエスト〜</span>
+        </h1>
+      </div>
+
+      <div class="status-gauges">
+        <div class="gauge-item">
+          <span>事件解決まで:</span>
+          <div class="gauge-bar-outer"><div class="gauge-bar-inner" id="hp-bar" style="width: 100%;"></div></div>
+          <span id="hp-val" style="color: var(--color-green);">50分</span>
+        </div>
+        <div class="gauge-item">
+          <span>💡 ひらめきポイント:</span>
+          <span id="mp-val" style="color: var(--color-gold);">10 / 10</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 50分全体進行タイムテーブル（折りたたみアコーディオン） -->
+    <details style="margin-bottom: 8px; background: #1f120a; border: 1px solid var(--border-dark); border-radius: 6px; padding: 6px 12px; font-size: 12.5px; color: var(--text-muted); max-width: 1000px; margin-left: auto; margin-right: auto;">
+      <summary style="cursor: pointer; color: var(--color-gold); font-weight: bold; font-size: 13px; user-select: none;">
+        ⏱️ 本日の捜査スケジュール（50分の流れを展開）
+      </summary>
+      <div style="margin-top: 6px; display: grid; gap: 3px; line-height: 1.5; border-top: 1px dashed var(--border-dark); padding-top: 6px; color: var(--text-parchment);">
+        <div><strong>0〜5分（5分）</strong>：🎬 捜査本部ブリーフィング・教師の実演「これ、AIと一緒なら自分で作れる！」</div>
+        <div><strong>5〜15分（10分）</strong>：STAGE 1 秘密道具の試運転・8大ガジェットから1本選んでCanvasで動かす</div>
+        <div><strong>15〜20分（5分）</strong>：STAGE 2 ガジェット改造・自分の言葉で1か所変えて修正を体験</div>
+        <div><strong>20〜23分（3分）</strong>：テーマ決定・自作テーマを8大アイデアから選択（またはGeminiと壁打ち）</div>
+        <div><strong>23〜40分（17分）</strong>：STAGE 3 秘密道具工房・オリジナル制作・動作確認・修正（※37分機能追加終了）</div>
+        <div><strong>40〜47分（7分）</strong>：STAGE 4 現場検証・探偵同士の端末交代ミニ体験会（相互プレイ＆フィードバック）</div>
+        <div><strong>47〜50分（3分）</strong>：STAGE 5 捜査報告書・振り返りGoogleフォーム提出</div>
+      </div>
+    </details>
+
+    <!-- 上部ステージナビゲーション（6段階） -->
+    <nav class="stage-nav" aria-label="捜査進行度">
+      <button class="stage-nav-btn active" data-stage="0" type="button">
+        <span>🎬 事件ファイル</span>
+        <span style="font-size: 10.5px; opacity: 0.8;">0〜5分</span>
+      </button>
+      <button class="stage-nav-btn" data-stage="1" type="button">
+        <span>① 道具を選ぶ</span>
+        <span style="font-size: 10.5px; opacity: 0.8;">5〜15分</span>
+      </button>
+      <button class="stage-nav-btn" data-stage="2" type="button">
+        <span>② 1か所改造</span>
+        <span style="font-size: 10.5px; opacity: 0.8;">15〜20分</span>
+      </button>
+      <button class="stage-nav-btn" data-stage="3" type="button">
+        <span>③ 秘密工房</span>
+        <span style="font-size: 10.5px; opacity: 0.8;">20〜40分</span>
+      </button>
+      <button class="stage-nav-btn" data-stage="4" type="button">
+        <span>④ 現場検証</span>
+        <span style="font-size: 10.5px; opacity: 0.8;">40〜47分</span>
+      </button>
+      <button class="stage-nav-btn" data-stage="5" type="button">
+        <span>⑤ 捜査報告書</span>
+        <span style="font-size: 10.5px; opacity: 0.8;">47〜50分</span>
+      </button>
+    </nav>
+  </header>
+
+  <main style="max-width: 1000px; margin: 16px auto 0; padding: 0 16px;">
+
+    <!-- ====================================================================
+         STAGE 0: 事件ファイル・導入ブリーフィング（0〜5分）
+         ==================================================================== -->
+    <div class="sherlock-box stage-pane" id="pane-stage-0">
+      <div class="sherlock-box-header">
+        <span>🎬 事件ファイル No.0930：AIと創る探偵の秘密道具（0〜5分）</span>
+        <span class="badge badge-gold">オープニング</span>
+      </div>
+
+      <div style="background: rgba(197, 155, 39, 0.12); border-left: 4px solid var(--border-brass); padding: 12px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 14.5px; line-height: 1.7;">
+        <strong>🕵️‍♂️ ベーカー街からの指令</strong>：<br>
+        「これまでデータを見てきた諸君、ようこそ探偵工房へ。<br>
+        今日君たちに課された使命は、<strong>『自分の言葉で、難事件を解決する秘密道具（Webアプリ）を仕立てる』</strong>ことだ。<br>
+        難しいプログラミング呪文を暗記する必要はない。相棒であるGemini Canvasに日本語で語りかけ、目の前で動く道具を錬成せよ！」
+      </div>
+
+      <!-- 説明スライド＆動画プレイヤー枠（16:9レスポンシブ） -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; gap: 6px;">
+          <button class="btn btn-gold btn-sm active" id="btn-show-slides" type="button" onclick="switchMediaMode('slides')">
+            📄 解説スライド（全7枚）
+          </button>
+          <button class="btn btn-sm" id="btn-show-video" type="button" onclick="switchMediaMode('video')">
+            🎬 解説動画
+          </button>
+        </div>
+        <div style="display: flex; gap: 8px; font-size: 13px;">
+          <a href="https://docs.google.com/presentation/d/1Z7fuWPrqU0OJN0b10yYrtH07qvdFODqHdcCeIf3UO_A/edit" target="_blank" rel="noopener noreferrer" style="color: var(--color-gold); text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">
+            📑 スライドを別画面で開く ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="video-container" id="media-viewport">
+        <!-- スライド埋め込みフレーム -->
+        <iframe id="slides-iframe" src="https://docs.google.com/presentation/d/1Z7fuWPrqU0OJN0b10yYrtH07qvdFODqHdcCeIf3UO_A/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true" style="width: 100%; height: 100%; border: none; position: absolute; top:0; left:0;"></iframe>
+        
+        <!-- 動画プレイヤーフレーム（非表示初期状態） -->
+        <div id="video-frame-container" style="display: none; width: 100%; height: 100%; position: absolute; top:0; left:0;">
+          <iframe id="video-iframe" style="display: none; width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          <div class="video-placeholder" id="video-placeholder-box" style="display: flex;">
+            <div style="font-size: 2.8rem; margin-bottom: 8px;">🎬</div>
+            <h3 style="font-size: 1.15rem; color: var(--color-gold); margin-bottom: 6px;">【解説動画】Gemini Canvasで道具を作る方法</h3>
+            <p style="font-size: 13px; color: var(--text-parchment); max-width: 540px; line-height: 1.5; text-align: center; margin-bottom: 12px;">
+              動画URL（YouTubeまたはGoogle Vids/Drive）をセットすると、この枠内で直接再生できます。<br>
+              未セット時は「📄 解説スライド」タブで全7枚のスライド内容をご確認ください。
+            </p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+              <button class="btn btn-gold btn-sm" type="button" onclick="setVideoUrlPrompt()">
+                🔗 動画URLを設定する
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- スライド・動画の要点サマリー -->
+      <div style="background: rgba(46, 28, 19, 0.7); border: 1px dashed var(--border-brass); border-radius: 6px; padding: 10px 14px; margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--text-parchment);">
+        <strong style="color: var(--color-gold);">⏱️ 50分の捜査フロー要点：</strong><br>
+        ①<strong>【試運転（Stage 1: 5〜15分）】</strong>8大ガジェットから1つ選び、Canvasで動かす<br>
+        ②<strong>【武器強化（Stage 2: 15〜20分）】</strong>同じチャットで「1か所だけ」言葉で改造する<br>
+        ③<strong>【秘密工房（Stage 3: 20〜40分）】</strong>オリジナル道具を開発（※37分で機能追加ストップ）<br>
+        ④<strong>【現場検証（Stage 4: 40〜47分）】</strong>隣の探偵とiPadをそのまま交換してミニ体験会<br>
+        ⑤<strong>【捜査報告（Stage 5: 47〜50分）】</strong>Googleフォームで振り返りを提出（スクショ不要）
+      </div>
+
+      <!-- iPadセンサー指南書（最初のタブだけにコンパクトに格納） -->
+      <details class="sherlock-accordion" style="margin-top: 16px;">
+        <summary>📱 【高度な挑戦】iPadのセンサー（傾き・マイク等）を使う道具を作りたい君へ</summary>
+        <div style="margin-top: 10px; font-size: 13px; line-height: 1.7; color: var(--text-parchment); border-top: 1px dashed var(--border-dark); padding-top: 8px;">
+          <p style="margin-bottom: 8px;">
+            iPadの傾き（加速度センサー）やマイクを使ったアプリも作れますが、<strong>Gemini Canvasのプレビュー画面（小窓の中）では、iPadのセキュリティ制限によってセンサーが動かないことがあります。</strong>
+          </p>
+          <div style="background: #1a0f0a; padding: 10px; border-radius: 4px; border-left: 3px solid var(--color-gold); margin-bottom: 8px;">
+            <strong>💡 AIに指示する時の「合言葉」</strong>：<br>
+            「※iPad対応のため、画面上の『開始ボタン』をタップした時に <code>DeviceMotionEvent.requestPermission()</code> を呼び出して許可を取得する設計にしてください。また、プレビューで動かない場合に備えて、画面タップで動作を試せるテストモードも併設してください。」
+          </div>
+          <p style="font-size: 12px; color: var(--text-muted);">
+            ※うまく動かないときは、別タブで開くか、まずは画面のボタン操作で動く道具から挑戦するのがオススメです！
+          </p>
+        </div>
+      </details>
+
+      <div style="margin-top: 16px; text-align: right;">
+        <button class="btn btn-gold" type="button" onclick="switchStage(1)">
+          次のステップへ：① 秘密道具を選ぶ（5〜15分） ➔
+        </button>
+      </div>
+    </div>
+
+
+    <!-- ====================================================================
+         STAGE 1: 秘密道具の試運転・8大ガジェット（5〜15分）
+         ==================================================================== -->
+    <div class="sherlock-box stage-pane" id="pane-stage-1" style="display: none;">
+      <div class="sherlock-box-header">
+        <span>STAGE 1: 8大秘密道具・1本選んで動かせ（目安：5〜15分）</span>
+        <span class="badge badge-gold">基本錬成</span>
+      </div>
+
+      <div style="background: rgba(197, 155, 39, 0.12); border-left: 4px solid var(--border-brass); padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 14px;">
+        <strong>📜 捜査の鉄則</strong>：まずは興味のある秘密道具を<strong>1つだけ選んで</strong>プロンプトをコピーし、Geminiに送信してみよう！迷ったら<strong>「10秒体内時計」</strong>か<strong>「化学モル計算」</strong>がオススメ！
+      </div>
+
+      <!-- 8大課題の横並びカードグリッド（四天王風） -->
+      <h3 style="font-size: 15px; color: var(--color-gold); margin-bottom: 8px;">▼ 挑戦する秘密道具を選択してください（タップで切り替え）</h3>
+      <div class="card-grid" id="stage1-cards">
+        
+        <!-- 道具1: 10秒体内時計 -->
+        <div class="gadget-card selected" data-task="timer">
+          <div class="gadget-card-title">
+            <span>⏱️ 10秒体内時計探偵ストップウォッチ</span>
+            <span class="badge badge-gold">定番</span>
+          </div>
+          <p class="gadget-card-desc">体内時計でピッタリ10.000秒を当てる計測器！誤差や直近5回の記録が表示される。</p>
+          <div style="font-size: 12px; color: var(--color-gold);">【情報・計測】ミリ秒計測・誤差計算・履歴保存</div>
+        </div>
+
+        <!-- 道具2: 1%ガチャ -->
+        <div class="gadget-card" data-task="gacha">
+          <div class="gadget-card-title">
+            <span>🎲 証拠確率1%シミュレータ</span>
+            <span class="badge badge-amber">数学</span>
+          </div>
+          <p class="gadget-card-desc">1%の証拠は100回探せば必ず見つかる？100マス（★と・）で確率の偏りを一目で体感！</p>
+          <div style="font-size: 12px; color: var(--color-gold);">【数学・確率】乱数シミュレーション・100マス可視化</div>
+        </div>
+
+        <!-- 道具3: ストループ効果 -->
+        <div class="gadget-card" data-task="stroop">
+          <div class="gadget-card-title">
+            <span>🧠 偽装を見破れ！心理テスト</span>
+            <span class="badge badge-green">心理</span>
+          </div>
+          <p class="gadget-card-desc">文字の意味と文字色に惑わされず正解をタップ！色の偽装に対する反応速度を計測。</p>
+          <div style="font-size: 12px; color: var(--color-gold);">【心理・認知】ストループ効果・反応時間ms解析</div>
+        </div>
+
+        <!-- 道具4: 化学モル計算（メタン燃焼） -->
+        <div class="gadget-card" data-task="mol">
+          <div class="gadget-card-title">
+            <span>🧪 メタン燃焼モル鑑定器</span>
+            <span class="badge badge-gold">化学</span>
+          </div>
+          <p class="gadget-card-desc">CH₄＋2O₂➔CO₂＋2H₂O。材料のmolを入力すると、生成量と余る気体をリアルタイム計算！</p>
+          <div style="font-size: 12px; color: var(--color-gold);">【化学基礎】物質量mol・完全燃焼・未反応気体</div>
+        </div>
+
+        <!-- 道具5: 生物・DNA転写翻訳 -->
+        <div class="gadget-card" data-task="dna">
+          <div class="gadget-card-title">
+            <span>🧬 暗号解読・DNA転写翻訳</span>
+            <span class="badge badge-cyan">生物</span>
+          </div>
+          <p class="gadget-card-desc">DNA塩基配列（TAC...）を入力すると相補的なmRNAを転写し、アミノ酸へ翻訳合成！</p>
+          <div style="font-size: 12px; color: var(--color-gold);">【生物基礎】転写・コドン表・アミノ酸結合</div>
+        </div>
+
+        <!-- 道具6: 数学・関数と接線 -->
+        <div class="gadget-card" data-task="math">
+          <div class="gadget-card-title">
+            <span>📈 軌道予測・関数＆接線スコープ</span>
+            <span class="badge badge-amber">数学</span>
+          </div>
+          <p class="gadget-card-desc">2次・3次・4次関数をタブ切替。スライダーで係数を変え、接線の傾きと極値を体感！</p>
+          <div style="font-size: 12px; color: var(--color-gold);">【数学II】微分係数・接線の方程式・極大極小</div>
+        </div>
+
+        <!-- 道具7: カメラRGB値計測 -->
+        <div class="gadget-card" data-task="camera">
+          <div class="gadget-card-title">
+            <span>📷 鑑識カメラ・RGBスキャナー</span>
+            <span class="badge badge-gold">画像</span>
+          </div>
+          <p class="gadget-card-desc">カメラ映像の指定ピクセルのRGB値（赤・緑・青）と16進カラーコードをリアルタイム検出！</p>
+          <div style="font-size: 12px; color: var(--color-gold);">【情報I】光の三原色RGB・カラーコード・色見本</div>
+        </div>
+
+        <!-- 道具8: オシロスコープ＆ピッチ当て -->
+        <div class="gadget-card" data-task="audio">
+          <div class="gadget-card-title">
+            <span>🎙️ 音紋捜査・ピッチ音当てゲーム</span>
+            <span class="badge badge-green">音響</span>
+          </div>
+          <p class="gadget-card-desc">マイク入力の波形をリアルタイム描画！指定された周波数の音（声・笛）を当てて証拠特定！</p>
+          <div style="font-size: 12px; color: var(--color-gold);">【物理・情報】オシロスコープ・周波数Hz・音高判定</div>
+        </div>
+
+      </div>
+
+      <!-- プロンプト編集枠エリア -->
+      <div style="background: var(--bg-surface); border: 2px solid var(--border-dark); border-radius: 8px; padding: 14px; margin-top: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <h3 style="font-size: 15px; color: var(--color-gold);" id="stage1-prompt-title">
+            ✨ 詠唱プロンプト：10秒体内時計探偵ストップウォッチ
+          </h3>
+          <span style="font-size: 12px; color: var(--text-muted);">※直接編集できます</span>
+        </div>
+
+        <textarea class="prompt-box" id="stage1-prompt-textarea" rows="8"></textarea>
+
+        <div class="action-row">
+          <button class="btn btn-gold" id="btn-copy-stage1" type="button">
+            📋 編集したプロンプトをコピー (-1 💡)
+          </button>
+          <button class="btn btn-reset" id="btn-reset-stage1" type="button" title="誤って消した時に初期ひな形に戻します">
+            🔄 ひらめき復活（初期ひな形に戻す）
+          </button>
+          <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer" class="btn btn-cyan">
+            🚀 Geminiを開く (別タブ) ↗
+          </a>
+          <span style="font-size: 12.5px; color: #7dd3fc; display: inline-flex; align-items: center; gap: 4px; font-weight: bold; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.4); padding: 4px 10px; border-radius: 4px;">
+            ⚠️ *Canvas機能をオンにすること
+          </span>
+        </div>
+
+        <!-- 動作確認チェックリスト -->
+        <div style="margin-top: 10px; border-top: 1px dashed var(--border-dark); padding-top: 10px;">
+          <h4 style="font-size: 13.5px; color: var(--color-gold); margin-bottom: 6px;">✅ アプリが動いたら、ここを確認してみよう！</h4>
+          <ul class="check-list" id="stage1-checks"></ul>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ====================================================================
+         STAGE 2: ガジェット改造・1か所変える（15〜20分）
+         ==================================================================== -->
+    <div class="sherlock-box stage-pane" id="pane-stage-2" style="display: none;">
+      <div class="sherlock-box-header">
+        <span>STAGE 2: ガジェット改造・1か所変えて強化せよ（目安：15〜20分）</span>
+        <span class="badge badge-gold">武器強化</span>
+      </div>
+
+      <div style="background: rgba(197, 155, 39, 0.12); border-left: 4px solid var(--border-brass); padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 14px;">
+        <strong>🔧 改造のコツ</strong>：最初から全部変えようとせず、<strong>「1か所だけ」</strong>自分の言葉でお願いしてみよう！<br>
+        制作中の<strong>同じGeminiチャット</strong>に続けてプロンプトを送信するのがポイントです。
+      </div>
+
+      <!-- 改造レシピ3選（横並びカード） -->
+      <h3 style="font-size: 15px; color: var(--color-gold); margin-bottom: 8px;">▼ どんな改造に挑戦しますか？（タップでレシピ切替）</h3>
+      <div class="card-grid" id="stage2-mods">
+        <div class="gadget-card selected" data-mod-idx="0">
+          <div class="gadget-card-title">
+            <span>🎯 難易度・ルールの変更</span>
+            <span class="badge badge-gold">ゲーム性UP</span>
+          </div>
+          <p class="gadget-card-desc">制限時間を短くする、目標数値をランダムにする、ペナルティを追加するなど、ルールを変更！</p>
+        </div>
+        <div class="gadget-card" data-mod-idx="1">
+          <div class="gadget-card-title">
+            <span>📊 データの詳細化・グラフ追加</span>
+            <span class="badge badge-cyan">分析力UP</span>
+          </div>
+          <p class="gadget-card-desc">平均値やベスト記録を表示する、結果を表形式にする、グラフや色分けでわかりやすくする！</p>
+        </div>
+        <div class="gadget-card" data-mod-idx="2">
+          <div class="gadget-card-title">
+            <span>🎨 探偵風デザイン＆演出追加</span>
+            <span class="badge badge-green">世界観UP</span>
+          </div>
+          <p class="gadget-card-desc">シャーロック風のシックな英国デザインにする、ボタンを押した時のアニメーションや効果音を追加！</p>
+        </div>
+      </div>
+
+      <!-- 改造プロンプト直接編集枠 -->
+      <div style="background: var(--bg-surface); border: 2px solid var(--border-dark); border-radius: 8px; padding: 14px; margin-top: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <h3 style="font-size: 15px; color: var(--color-gold);" id="stage2-prompt-title">
+            🔧 改造指示プロンプト：難易度・ルールの変更
+          </h3>
+          <span style="font-size: 12px; color: var(--text-muted);">※同じチャットに送信します</span>
+        </div>
+
+        <textarea class="prompt-box" id="stage2-prompt-textarea" rows="6"></textarea>
+
+        <div class="action-row">
+          <button class="btn btn-gold" id="btn-copy-stage2" type="button">
+            📋 編集した改造指示をコピー (-1 💡)
+          </button>
+          <button class="btn btn-reset" id="btn-reset-stage2" type="button">
+            🔄 改造ひな形復活
+          </button>
+          <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer" class="btn btn-cyan">
+            🚀 制作中のGeminiタブに戻る ↗
+          </a>
+          <span style="font-size: 12.5px; color: #7dd3fc; display: inline-flex; align-items: center; gap: 4px; font-weight: bold; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.4); padding: 4px 10px; border-radius: 4px;">
+            ⚠️ *Canvas機能をオンにすること
+          </span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ====================================================================
+         STAGE 3: 秘密工房・オリジナル道具を作れ（20〜40分）
+         ==================================================================== -->
+    <div class="sherlock-box stage-pane" id="pane-stage-3" style="display: none;">
+      <div class="sherlock-box-header">
+        <span>STAGE 3: 秘密工房・オリジナル道具を作れ（目安：20〜40分）</span>
+        <span class="badge badge-gold">完全自作</span>
+      </div>
+
+      <div style="background: rgba(197, 155, 39, 0.12); border-left: 4px solid var(--border-brass); padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 14px;">
+        <strong>💡 制作のガイドライン</strong>：<br>
+        ・<strong>20〜23分</strong>：テーマを決定（8大アイデアから選ぶ、さっきの道具をさらに大改造する、Geminiに相談する）<br>
+        ・<strong>23〜37分</strong>：集中制作・動作確認・修正（※<strong>37分で機能追加ストップ！</strong>）<br>
+        ・<strong>37〜40分</strong>：友達に見せるための使い方確認
+      </div>
+
+      <!-- ラテラル発想8大アイデア（開閉アコーディオン化） -->
+      <details class="sherlock-accordion">
+        <summary>💡 【開く】ラテラル（水平思考）な秘密道具アイデア8選（タップで開閉）</summary>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 8px 0;">カードをタップすると下の自作枠にひな形がセットされます。</p>
+        <div class="card-grid" id="stage3-ideas" style="margin-top: 8px;">
+          <div class="gadget-card" data-lateral-idx="0">
+            <div class="gadget-card-title"><span>🕵️ 容疑者アリバイ生成機</span></div>
+            <p class="gadget-card-desc">時間・場所・同行者を選ぶと、完璧な架空のアリバイ日誌を自動生成するスパイツール！</p>
+          </div>
+          <div class="gadget-card" data-lateral-idx="1">
+            <div class="gadget-card-title"><span>🔐 シーザー暗号メモ送信機</span></div>
+            <p class="gadget-card-desc">秘密のメッセージを文字ずらし（シーザー暗号）で暗号化・復号化する探偵連絡ツール！</p>
+          </div>
+          <div class="gadget-card" data-lateral-idx="2">
+            <div class="gadget-card-title"><span>💓 嘘発見器・タップゆらぎ測定</span></div>
+            <p class="gadget-card-desc">質問に答える時の「タップのためらい時間」や連打の間隔を測って怪しさを判定するジョークツール！</p>
+          </div>
+          <div class="gadget-card" data-lateral-idx="3">
+            <div class="gadget-card-title"><span>🚨 侵入者警告！音量デシベルセンサー</span></div>
+            <p class="gadget-card-desc">マイクの音量が一定レベルを超えたら画面が赤く点滅して警告する防犯ガジェット！</p>
+          </div>
+          <div class="gadget-card" data-lateral-idx="4">
+            <div class="gadget-card-title"><span>🎯 3問犯人当てクイズ＆正答率分析</span></div>
+            <p class="gadget-card-desc">友達に出題する3問ミステリークイズ。問題ごとの正答率や回答時間を自動集計！</p>
+          </div>
+          <div class="gadget-card" data-lateral-idx="5">
+            <div class="gadget-card-title"><span>⚡ 利き手vs逆手 反応速度対決</span></div>
+            <p class="gadget-card-desc">合図が出たら即タップ！右手と左手で反応速度を5回ずつ比較してグラフ化！</p>
+          </div>
+          <div class="gadget-card" data-lateral-idx="6">
+            <div class="gadget-card-title"><span>🎒 忘れ物ゼロ！登校持ち物チェッカー</span></div>
+            <p class="gadget-card-desc">曜日ごとの時間割に合わせて持ち物をチェック。毎日の面倒を減らす生活改善ツール！</p>
+          </div>
+          <div class="gadget-card" data-lateral-idx="7">
+            <div class="gadget-card-title"><span>⏱️ 集中＆休憩ポモドーロタイマー</span></div>
+            <p class="gadget-card-desc">25分集中＋5分休憩を管理。勉強セット数と累計時間を記録する学習サポートツール！</p>
+          </div>
+        </div>
+      </details>
+
+      <!-- Gemini発想壁打ちプロンプト -->
+      <div style="background: rgba(197, 155, 39, 0.08); border: 2px dashed var(--border-brass); border-radius: 8px; padding: 14px; margin: 14px 0;">
+        <h4 style="font-size: 14.5px; color: var(--color-gold); margin-bottom: 6px;">
+          🤖 【おすすめ】相棒ワトソン（Gemini）にアイデアを出してもらう壁打ちプロンプト
+        </h4>
+        <p style="font-size: 13px; color: var(--text-parchment); margin-bottom: 8px;">
+          「何を作ればいいか思いつかない…」という時は、Geminiに相談してアイデアを3つ出してもらいましょう！
+        </p>
+        <textarea class="prompt-box" id="gemini-brainstorm-box" rows="5"></textarea>
+        <div class="action-row">
+          <button class="btn btn-gold" id="btn-copy-brainstorm" type="button">
+            📋 壁打ちプロンプトをコピー (-1 💡)
+          </button>
+          <button class="btn btn-reset" id="btn-reset-brainstorm" type="button">
+            🔄 壁打ちひな形復活
+          </button>
+        </div>
+      </div>
+
+      <!-- 自作プロンプト直接編集枠 -->
+      <div style="background: var(--bg-surface); border: 2px solid var(--border-dark); border-radius: 8px; padding: 14px; margin-top: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <h3 style="font-size: 15px; color: var(--color-gold);">
+            ⚔️ 自作道具プロンプト錬成枠（［かっこ］の中を書き換えて送信！）
+          </h3>
+          <span style="font-size: 12px; color: var(--text-muted);">※直接編集可能</span>
+        </div>
+
+        <textarea class="prompt-box" id="stage3-custom-textarea" rows="8"></textarea>
+
+        <div class="action-row">
+          <button class="btn btn-gold" id="btn-copy-stage3" type="button">
+            📋 編集した自作プロンプトをコピー (-1 💡)
+          </button>
+          <button class="btn btn-reset" id="btn-reset-stage3" type="button">
+            🔄 自作ひな形復活
+          </button>
+          <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer" class="btn btn-cyan">
+            🚀 Geminiを開く (別タブ) ↗
+          </a>
+          <span style="font-size: 12.5px; color: #7dd3fc; display: inline-flex; align-items: center; gap: 4px; font-weight: bold; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.4); padding: 4px 10px; border-radius: 4px;">
+            ⚠️ *Canvas機能をオンにすること
+          </span>
+        </div>
+      </div>
+
+      <!-- 困ったときの修正プロンプト -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-dark); border-radius: 8px; padding: 14px; margin-top: 14px;">
+        <h4 style="font-size: 14px; color: var(--color-cyan); margin-bottom: 6px;">
+          🔧 3分困ったら！ AIへの「修正指示」プロンプト（バグを直してもらう呪文）
+        </h4>
+        <textarea class="prompt-box" id="stage3-repair-textarea" rows="4" style="border-color: var(--color-cyan);"></textarea>
+        <div class="action-row">
+          <button class="btn btn-cyan" id="btn-copy-repair" type="button">
+            📋 修正プロンプトをコピー
+          </button>
+          <button class="btn btn-reset" id="btn-reset-repair" type="button">
+            🔄 修正ひな形復活
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ====================================================================
+         STAGE 4: 現場検証・探偵同士の体験会（40〜47分）
+         ==================================================================== -->
+    <div class="sherlock-box stage-pane" id="pane-stage-4" style="display: none;">
+      <div class="sherlock-box-header">
+        <span>STAGE 4: 現場検証・相棒と秘密道具を使い合え（目安：40〜47分）</span>
+        <span class="badge badge-gold">ミニ体験会</span>
+      </div>
+
+      <div style="background: rgba(197, 155, 39, 0.12); border-left: 4px solid var(--border-brass); padding: 12px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 14.5px; line-height: 1.8;">
+        <strong>💡 公開リンクは不要！ 端末をそのまま交代して使ってもらおう！</strong><br>
+        ・<strong>40〜41分</strong>：自分の道具の「使い方」を1文で説明する<br>
+        ・<strong>41〜43分</strong>：AさんのiPadをBさんが実際に操作してみる<br>
+        ・<strong>43〜45分</strong>：BさんのiPadをAさんが実際に操作してみる（交代！）<br>
+        ・<strong>45〜47分</strong>：良かった点と「こうするともっと良くなる」を1つずつ伝え合う！
+      </div>
+
+      <div style="background: var(--bg-surface); border: 2px solid var(--border-dark); border-radius: 8px; padding: 14px; margin-top: 14px;">
+        <h3 style="font-size: 15px; color: var(--color-gold); margin-bottom: 6px;">🗣️ 相手への説明の型（そのまま使えます）</h3>
+        <p style="background: #24160f; padding: 10px 12px; border-radius: 6px; font-size: 14.5px; color: #fff; border: 1px solid var(--border-dark);">
+          「これは<strong>［誰］</strong>が<strong>［何を］</strong>する秘密道具です。まずこのボタンをタップして、次に［　］してみてください。」
+        </p>
+
+        <h3 style="font-size: 15px; color: var(--color-cyan); margin: 14px 0 6px;">💬 フィードバックの型（1つずつ伝えよう）</h3>
+        <ul style="list-style: none; display: grid; gap: 6px; font-size: 14.5px;">
+          <li style="background: #24160f; padding: 8px 12px; border-radius: 6px; border-left: 4px solid var(--color-green);">
+            👍 <strong>良かった点</strong>：「ここが直感的で分かりやすかった！」「デザインがかっこいい！」
+          </li>
+          <li style="background: #24160f; padding: 8px 12px; border-radius: 6px; border-left: 4px solid var(--color-gold);">
+            💡 <strong>改善アイデア</strong>：「ここがこう変わると、もっと使いやすくなると思う！」
+          </li>
+        </ul>
+      </div>
+    </div>
+
+
+    <!-- ====================================================================
+         STAGE 5: 捜査報告書提出・Googleフォーム（47〜50分）
+         ==================================================================== -->
+    <div class="sherlock-box stage-pane" id="pane-stage-5" style="display: none;">
+      <div class="sherlock-box-header">
+        <span>STAGE 5: 捜査報告書・Googleフォーム提出（目安：47〜50分）</span>
+        <span class="badge badge-gold">クエスト完了</span>
+      </div>
+
+      <div style="background: rgba(197, 155, 39, 0.12); border-left: 4px solid var(--border-brass); padding: 12px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 14.5px;">
+        <strong>📝 提出方法</strong>：<br>
+        下の<strong>振り返りGoogleフォーム</strong>に回答を入力して送信してください。
+      </div>
+
+      <!-- Googleフォーム埋め込みコンテナ -->
+      <h3 style="font-size: 15px; color: var(--color-gold); margin-bottom: 6px;">
+        📋 振り返りGoogleフォーム
+      </h3>
+      <div class="form-container">
+        <iframe id="google-form-iframe" src="about:blank" title="振り返りGoogleフォーム"></iframe>
+        <div id="form-fallback" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: #333; padding: 20px; text-align: center;">
+          <div style="font-size: 2.5rem; margin-bottom: 8px;">📑</div>
+          <h4 style="font-size: 1.1rem; color: #111; margin-bottom: 4px;">Googleフォーム 埋め込み枠</h4>
+          <p style="font-size: 13.5px; color: #666; max-width: 500px; margin-bottom: 12px;">
+            学校のGoogleフォームURLが指定されるとここにフォームが表示されます。<br>
+            先生からURLが案内されたら、下のボタンからURLを入力して読み込むこともできます。
+          </p>
+          <button class="btn btn-gold" type="button" onclick="loadFormPrompt()">
+            🔗 フォームURLを入力して読み込む
+          </button>
+        </div>
+      </div>
+
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-dark); border-radius: 6px; padding: 12px; margin-top: 14px;">
+        <h4 style="font-size: 13.5px; color: var(--color-gold); margin-bottom: 6px;">🎯 本日の3大達成条件チェック</h4>
+        <ul class="check-list">
+          <li class="check-item"><label><input type="checkbox" id="chk-goal-1"> ① 操作できる部分がある（ボタンや入力欄など）</label></li>
+          <li class="check-item"><label><input type="checkbox" id="chk-goal-2"> ② 操作すると結果が変わる（値や画面表示が変化する）</label></li>
+          <li class="check-item"><label><input type="checkbox" id="chk-goal-3"> ③ 自分で試して、1回以上修正した</label></li>
+        </ul>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- トースト通知 -->
+  <div id="toast" role="alert" aria-live="assertive"></div>
+
+  <!-- 下部固定コマンドバー（探偵仕様） -->
+  <footer class="command-bar no-print">
+    <button class="cmd-btn" id="cmd-video" type="button">
+      🎬 事件ファイル
+    </button>
+    <button class="cmd-btn" id="cmd-gadget" type="button">
+      🔍 秘密道具
+    </button>
+    <button class="cmd-btn" id="cmd-mod" type="button">
+      🔧 改造ラボ
+    </button>
+    <button class="cmd-btn" id="cmd-lab" type="button">
+      💡 秘密工房
+    </button>
+    <button class="cmd-btn" id="cmd-report" type="button">
+      📜 捜査報告書
+    </button>
+  </footer>
+
+  <!-- ====================================================================
+       スクリプトコア（全データ・ロジック・音響）
+       ==================================================================== -->
+  <script>
+    /* ==========================================================================
+       探偵ガジェット・クエスト プログラムコア
+       ========================================================================== */
+
+    // 8大秘密道具の定義
+    const GADGET_PROMPTS = {
+      timer: {
+        title: "⏱️ 10秒体内時計探偵ストップウォッチ",
+        prompt: `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】体内時計でピッタリ10.000秒を当てる計測ゲーム
+【画面・機能要件】
+1. 大きな「計測スタート」ボタンをタップするとタイマーが開始（計測中は経過時間を画面に隠す）。
+2. 「ストップ」ボタンを押すと停止し、実測時間と10.000秒との誤差（±○.○○秒）をミリ秒単位で大きく表示。
+3. 直近5回の記録を表で履歴表示し、平均誤差も算出する。
+4. 「記録リセット」ボタンですべてクリアできる。
+5. 計測中にスタートボタンを連打できないように無効化する。
+6. デザイン：探偵のストップウォッチのような、洗練されたダークネイビーとゴールドの配色。iPadでタップしやすい大きなボタン。`,
+        checks: [
+          "すぐ止めると0秒に近い？（正常に計測されているか）",
+          "3回試すと、結果の一覧がちゃんと増えていく？",
+          "全消去ボタンを押すと記録が綺麗にリセットされる？"
+        ]
+      },
+      gacha: {
+        title: "🎲 証拠確率1%シミュレータ",
+        prompt: `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】当たり確率1%のガチャを100回引いた結果を可視化するシミュレータ
+【画面・機能要件】
+1. 「100回引く」ボタンを押すと、1%（0.01）の確率抽選を100回一括実行。
+2. 画面に10×10の正方形マス（合計100マス）を並べ、ハズレは「・」、当たりは「★（金色に光る）」でアニメーション表示。
+3. 今回の当たり個数（○個）と、累計で引いた総回数・総当たり回数を集計表示。
+4. 「100回引いても当たらない確率が約37%あること」をワンポイント解説として表示。
+5. デザイン：サイバー調の100マス盤面。iPadで押しやすい大きなボタン。`,
+        checks: [
+          "ボタンを1回押すと、マス目が100個埋まる？",
+          "3回引くと、当たりが0個の時と2個以上の時がある？",
+          "累計の当たり回数が正しく足されている？"
+        ]
+      },
+      stroop: {
+        title: "🧠 偽装を見破れ！心理テスト",
+        prompt: `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】文字の意味と文字色が違うストループ効果を体感する心理実験ゲーム
+【画面・機能要件】
+1. 画面中央に大きく色の名前（「あか」「あお」「きいろ」「みどり」）を表示するが、文字色をランダムに設定する（例：「あか」という文字を青色で塗る）。
+2. 下部に「赤」「青」「黄」「緑」の4つの選択肢ボタンを配置。
+3. ルール：文字の意味ではなく【文字の色】を素早くタップさせる。
+4. 全10問出題し、各問題の「一致条件（文字と色が同じ）」と「不一致条件（文字と色が違う）」それぞれの平均反応時間（ms）を比較表示。
+5. デザイン：明るく見やすい配色。押し間違いを防ぐ大きなタッチボタン。`,
+        checks: [
+          "文字の「色」をタップすると次の問題に進む？",
+          "10問終わると、平均反応時間がミリ秒で表示される？",
+          "不一致の時のほうが時間がかかっているか比較できる？"
+        ]
+      },
+      mol: {
+        title: "🧪 メタン燃焼モル鑑定器",
+        prompt: `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】メタンの完全燃焼反応（CH4 + 2O2 -> CO2 + 2H2O）の物質量（mol）計算シミュレータ
+【画面・機能要件】
+1. メタン（CH4）のmol数（0.1〜5.0mol）と、酸素（O2）のmol数（0.1〜10.0mol）をスライダーまたは数値入力で設定。
+2. 「点火・反応」ボタンを押すと、反応式 CH4 + 2O2 -> CO2 + 2H2O に基づいて計算。
+3. 生成される二酸化炭素（CO2）のmol数と、水（H2O）のmol数をビジュアル表示。
+4. どちらが不足し、どちらが未反応で余ったかを「余った気体：○mol」と明確に警告・解説。
+5. 分子モデル風の簡易アイコンまたは棒グラフで、反応前と反応後の物質量を視覚的に比較。
+6. デザイン：理科室のデジタル分析器のようなクリーンで見やすいデザイン。`,
+        checks: [
+          "CH4=1mol, O2=2molで点火すると、CO2=1mol, H2O=2molで余り0になる？",
+          "O2を多く（例: 5mol）にすると、余ったO2が3molと表示される？",
+          "数値を変更すると瞬時に再計算される？"
+        ]
+      },
+      dna: {
+        title: "🧬 暗号解読・DNA転写翻訳",
+        prompt: `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】高校生物基礎の「DNAの転写と翻訳」をインタラクティブに学べるシミュレータ
+【画面・機能要件】
+1. DNAの塩基配列（例: TAC TTC AAA CCG ACT など）を画面に表示（編集またはプリセット選択可能）。
+2. 「転写」ボタンを押すと、相補的なmRNA塩基配列（AUG AAG UUU GGC UGA）が下段に生成される。
+3. 「翻訳」ボタンを押すと、コドン（3つ組）ごとにアミノ酸（メチオニン-リシン-フェニルアラニン-グリシン-終止）に変換され、ペプチド鎖（タンパク質）が繋がるアニメーション表示。
+4. コドン表の簡易早見表を画面内に併設し、AUGが開始コドンであることを解説。
+5. デザイン：遺伝子の暗号を解読するような、サイバー感のある見やすいデザイン。`,
+        checks: [
+          "「転写」を押すと、TがAに、AがUに、CがGに正しく変換される？",
+          "「翻訳」を押すと、AUGがメチオニンから始まるアミノ酸配列になる？",
+          "DNA配列を書き換えても正しく転写・翻訳できる？"
+        ]
+      },
+      math: {
+        title: "📈 軌道予測・関数＆接線スコープ",
+        prompt: `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】2次・3次・4次関数のグラフと、指定した点における「接線」を操作しながら体感理解するアプリ
+【画面・機能要件】
+1. 上部のタブで「2次関数 (ax²+bx+c)」「3次関数 (ax³+bx²+cx+d)」「4次関数」を切り替え。
+2. 係数a, b, c, dをスライダーで直感的に変更でき、HTML5 Canvas上にグラフがリアルタイム再描画。
+3. x座標を動かす「接点スライダー」があり、グラフ上のその点に赤い接線を描画。
+4. その点における接線の傾き（微分係数 f'(x)）と、極値（最大・最小・極大・極小）の座標を数値表示。
+5. デザイン：グラフの目盛りがくっきり見やすい数学分析モニター風デザイン。`,
+        checks: [
+          "スライダーを動かすとグラフの形がなめらかに変わる？",
+          "接点スライダーを動かすと、接線の傾きが数値で連動する？",
+          "2次関数と3次関数をタブで切り替えられる？"
+        ]
+      },
+      camera: {
+        title: "📷 鑑識カメラ・RGBスキャナー",
+        prompt: `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】カメラ機能または画像から指定ピクセルのRGB値（赤・緑・青）を計測する色彩鑑定ツール
+【画面・機能要件】
+1. 「カメラを起動」ボタンを押すと、iPad/PCのWebカメラ映像をビデオ表示（ファイル画像アップロード機能も併設）。
+2. 映像の中央に照準マーク（十字カーソル）を表示し、そのピクセルの色をリアルタイム取得（画面タップした位置の色取得も可能）。
+3. 取得した色を大きな色見本ボックスで表示し、RGB値（R: 0〜255, G: 0〜255, B: 0〜255）と16進カラーコード（#RRGGBB）を数値表示。
+4. 「色を保存」ボタンを押すと、証拠カラーパレットとして直近5色の履歴を保存できる。
+5. デザイン：科学捜査のカメラ解析モニターのような本格的なUI。`,
+        checks: [
+          "カメラ映像が正常に表示される（または画像を選択できる）？",
+          "照準を合わせた場所のRGB値とカラーコードが表示される？",
+          "色保存ボタンを押すと、パレットに色がストックされる？"
+        ]
+      },
+      audio: {
+        title: "🎙️ 音紋捜査・ピッチ音当てゲーム",
+        prompt: `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】マイク入力を用いたリアルタイムオシロスコープ波形表示＆音高（周波数）当てゲーム
+【画面・機能要件】
+1. 「マイク開始」ボタンを押すと、Web Audio APIでマイク音声をリアルタイム波形（オシロスコープ）としてCanvasに描画。
+2. ピッチ検出（周波数Hz推定）を行い、現在出ている音の高さ（ド・レ・ミや周波数Hz）を判定。
+3. 【音当てゲーム】：画面に目標の音（例：「440Hz（ラの音）」や「261Hz（ドの音）」）が出題される。
+4. 声やリコーダーでその音を出し、目標の周波数と一致した状態で2秒キープできたら「証拠音特定！クリア！」と判定。
+5. マイクが使えない時のために「テスト音再生ボタン」を併設する。
+6. デザイン：音響研究所のオシロスコープ画面のようなグリーンネオンの波形デザイン。`,
+        checks: [
+          "マイクを開始すると、声に合わせて波形がピョコピョコ動く？",
+          "声の高さを変えると、検出周波数（Hz）が変わる？",
+          "目標の音を出すと判定バーが進む？"
+        ]
+      }
+    };
+
+    // 改造レシピ
+    const MOD_RECIPES = [
+      {
+        title: "🎯 難易度・ルールの変更",
+        prompt: `先ほど作成したアプリに、以下の改造を加えてください。
+【改造内容】
+1. 難易度を「イージー」「ノーマル」「ハード」の3段階から選べるようにしてください。
+2. ハードモードでは［制限時間を半分にする／目標の判定をシビアにする］ように変更してください。
+3. ゲーム終了時に、得点に応じた探偵ランク（S級名探偵、見習い探偵など）を表示してください。`
+      },
+      {
+        title: "📊 データの詳細化・グラフ追加",
+        prompt: `先ほど作成したアプリに、以下の改造を加えてください。
+【改造内容】
+1. 過去の試行結果をHTML5 Canvasによる折れ線グラフまたは棒グラフで画面下部に描画してください。
+2. 平均値、最高記録、最低記録を自動計算してハイライト表示してください。
+3. 「CSV形式でデータをコピー」するボタンを追加し、表データをワンタップでコピーできるようにしてください。`
+      },
+      {
+        title: "🎨 探偵風デザイン＆演出追加",
+        prompt: `先ほど作成したアプリに、以下の改造を加えてください。
+【改造内容】
+1. デザインを「シャーロック・ホームズの書斎」のような、重厚なダークブラウンとアンティークゴールドが光るヴィンテージなデザインに統一してください。
+2. ボタンをタップした時にWeb Audio APIを使ってピピッと鳴るレトロな電子音やチャイムSEを鳴らしてください。
+3. 成功した時に画面に「EVIDENCE CONFIRMED（証拠確保）」のスタンプアニメーションを表示してください。`
+      }
+    ];
+
+    // ラテラル発想ヒント
+    const LATERAL_HINTS = [
+      `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】容疑者のアリバイ日誌を自動生成する探偵支援ジェネレーター
+【機能】
+1. 日時（9月30日 15:00等）、場所（理科室、図書館、カフェ）、同行者を選択。
+2. 「アリバイ生成」ボタンを押すと、それっぽい架空の行動記録と「証明するレシート風メモ」を画面に生成。
+3. 「怪しさチェック」ボタンで、矛盾がないかを判定する。
+4. デザイン：探偵の捜査手帳風デザイン。`,
+
+      `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】秘密の暗号メモを作成・解読するシーザー暗号スパイツール
+【機能】
+1. メモ本文を入力し、ずらす文字数（シフト数 1〜25）をスライダーで選択。
+2. 「暗号化」ボタンでシーザー暗号に変換。「復号化」で元の文章に戻す。
+3. ワンタップで暗号文をクリップボードにコピーできる。
+4. デザイン：秘密スパイの暗号解読機風デザイン。`,
+
+      `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】タイピングの迷い時間から「怪しさ」を判定する嘘発見器風ジョークツール
+【機能】
+1. 画面に「昨日の放課後、何をしていた？」などの質問が表示される。
+2. 入力欄に文字を打つ時のキーストローク間隔（キーとキーの間の秒数）を計測。
+3. 入力に迷って手が止まった時間が多いほど「怪しさ度（%）」が高く表示される演出。
+4. デザイン：心電図モニターのような緊張感のあるUI。`,
+
+      `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】マイク音量を監視し、一定以上の音でアラートを出す騒音探知器
+【機能】
+1. マイク入力を開始し、現在の音量をリアルタイムメーターで表示。
+2. スライダーで「しきい値（警戒レベル）」を設定。
+3. 警戒レベルを超える大きな足音や声がすると、画面が赤く点滅して「INTRUDER ALERT!」と警告。
+4. デザイン：防犯センサーモニター風。`,
+
+      `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】3問のミステリークイズを出題し、正答率と回答時間を分析するアプリ
+【機能】
+1. 探偵に関する3択クイズを3問連続で出題。
+2. 1問ごとの回答時間をミリ秒で計測。
+3. 最後に正解数、総所要時間、問題別の難易度分析結果を表示。
+4. デザイン：クイズ番組の推理ボード風。`,
+
+      `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】右手（利き手）と左手（逆手）の反射神経を比較するスピードテスト
+【機能】
+1. 画面がランダムな秒数（2〜5秒後）で黄色から赤色に変わる。
+2. 赤になった瞬間に素早く画面をタップ！
+3. 右手で5回、左手で5回計測し、それぞれの平均反応時間と勝敗を表示。
+4. デザイン：スポーツテスト風のすっきりしたUI。`,
+
+      `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】毎日の忘れ物をゼロにする、曜日別持ち物チェックツール
+【機能】
+1. 月曜〜金曜のタブを切り替え、その日の教科書や持ち物をチェックボックスで一覧表示。
+2. チェックした項目をローカルストレージに自動保存。
+3. 全てチェックがつくと「忘れ物なし！出撃準備完了！」のファンファーレ。
+4. デザイン：持ち物検査官のチェックボード風。`,
+
+      `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【目的】25分集中＋5分休憩を繰り返すポモドーロ学習タイマー
+【機能】
+1. 「集中開始（25分）」と「休憩（5分）」をワンタップで切り替え。
+2. 残り時間を大きくカウントダウン表示。
+3. 今日の達成セット数を星マークで記録。
+4. デザイン：レトロなゼンマイ式タイマー風。`
+    ];
+
+    // 自作プロンプトひな形
+    const INITIAL_CUSTOM_PROMPT = `以下のWebアプリをHTML/CSS/JavaScript単一ファイルで作成してください。
+【作りたい道具】［例: 友達と遊べる1問1答の心理クイズマシン］
+【使う人・目的】［例: 高校生が友達の性格や相性を診断して楽しむ］
+【必要な機能】
+1. ［例: 質問が3つ順番に表示され、選択肢をタップできる］
+2. ［例: 最後に診断結果のタイプと解説が大きく表示される］
+3. ［例: 最初からやり直すリセットボタンがある］
+【デザインの要望】［例: シャーロック・ホームズの書斎のような、アンティーク調でかっこいいデザイン。iPadでタップしやすい大きなボタン］`;
+
+    // 修正プロンプトひな形
+    const INITIAL_REPAIR_PROMPT = `先ほど作成してもらったコードで、［ボタンを押しても結果が変わらない／タイマーが止まらない］という不具合が起きました。
+エラーの原因を修正し、正しく動く完全なHTMLコードをもう一度出力してください。
+※iPadOSのSafariブラウザで確実に動くように配慮してください。`;
+
+    // Gemini壁打ちプロンプトひな形
+    const INITIAL_BRAINSTORM_PROMPT = `私は高校1年生で、いま「Gemini Canvasを使って1枚のHTML/JSで動く名探偵の秘密道具（Webアプリ）」を作る授業を受けています。
+私は［理科の実験／スポーツ／ゲーム／音楽／毎日の学校生活］に興味があります。
+高校生がiPadの画面で実際に触って「うわ、これ動くの面白い！」と友達に見せたくなるような、ユニークで少し意外性のあるWebアプリのアイデアを3つ提案してください。
+それぞれの「道具の名前」「どんな機能か」「どうして面白いか」を簡潔に教えてください。`;
+
+
+    /* ==========================================================================
+       状態管理
+       ========================================================================== */
+    let currentStage = 0;
+    let selectedGadget = 'timer';
+    let selectedModIdx = 0;
+    let hiramekiCount = 10;
+    let remainingMinutes = 50;
+
+    // 音響システム（Web Audio API）
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // 探偵風効果音生成関数（ひらめき音・リセット音・クリック音・ファンファーレ）
+    function playSound(type) {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        if (type === 'click') {
+          // 木の机をトントンと叩くような上品なクリック音
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(150, now + 0.04);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.linearRampToValueAtTime(0, now + 0.04);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.04);
+        } else if (type === 'hirameki') {
+          // ピコーン！💡 キラーン✨ という鮮やかなひらめきチャイム音
+          const notes = [784.0, 987.77, 1318.51, 1975.53]; // G5, B5, E6, B6
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+            gain.gain.setValueAtTime(0, now + idx * 0.05);
+            gain.gain.linearRampToValueAtTime(0.2, now + idx * 0.05 + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.05);
+            osc.stop(now + idx * 0.05 + 0.35);
+          });
+        } else if (type === 'reset') {
+          // からくり時計の針が巻き戻るようなリセット音
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(350, now);
+          osc.frequency.linearRampToValueAtTime(700, now + 0.12);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.linearRampToValueAtTime(0, now + 0.15);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (type === 'fanfare') {
+          // 事件解決ファンファーレ
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            const startTime = now + idx * 0.09;
+            gain.gain.setValueAtTime(0.2, startTime);
+            gain.gain.linearRampToValueAtTime(0, startTime + 0.25);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + 0.25);
+          });
+        }
+      } catch (e) {
+        console.warn("AudioContext error:", e);
+      }
+    }
+
+
+    /* ==========================================================================
+       UI制御・イベントハンドラ
+       ========================================================================== */
+
+    // トースト通知表示
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    // iPad対応3段フォールバックコピー
+    async function copyText(text, successMsg) {
+      let copied = false;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          copied = true;
+        } catch (err) {
+          copied = false;
+        }
+      }
+      if (!copied) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.setSelectionRange(0, 999999);
+          copied = document.execCommand('copy');
+          document.body.removeChild(ta);
+        } catch (err) {
+          copied = false;
+        }
+      }
+
+      if (copied) {
+        playSound('hirameki'); // ひらめきSE！
+        if (hiramekiCount > 0) {
+          hiramekiCount--;
+          document.getElementById('mp-val').textContent = `${hiramekiCount} / 10`;
+        }
+        showToast(successMsg || "💡 ひらめきをコピーしました！Geminiに貼り付けよう！");
+      } else {
+        alert("コピーできませんでした。枠内のテキストを手動で全選択してコピーしてください。");
+      }
+    }
+
+    // ステージ切替
+    function switchStage(stageNum) {
+      currentStage = stageNum;
+      playSound('click');
+
+      // ナビボタンの更新
+      document.querySelectorAll('.stage-nav-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.stage) === stageNum);
+      });
+
+      // ペインの表示・非表示
+      for (let i = 0; i <= 5; i++) {
+        const pane = document.getElementById(`pane-stage-${i}`);
+        if (pane) {
+          pane.style.display = (i === stageNum) ? 'block' : 'none';
+        }
+      }
+
+      // 残時間HPバーの連動
+      const stageTimes = [50, 45, 35, 25, 10, 3];
+      remainingMinutes = stageTimes[stageNum] || 50;
+      const hpPercent = (remainingMinutes / 50) * 100;
+      const hpBar = document.getElementById('hp-bar');
+      const hpVal = document.getElementById('hp-val');
+      if (hpBar && hpVal) {
+        hpBar.style.width = `${hpPercent}%`;
+        hpVal.textContent = `${remainingMinutes}分`;
+        if (remainingMinutes <= 10) {
+          hpBar.style.background = 'var(--color-crimson)';
+          hpVal.style.color = 'var(--color-crimson)';
+        } else if (remainingMinutes <= 25) {
+          hpBar.style.background = 'var(--color-amber)';
+          hpVal.style.color = 'var(--color-amber)';
+        } else {
+          hpBar.style.background = 'var(--color-green)';
+          hpVal.style.color = 'var(--color-green)';
+        }
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // STAGE 1: 道具の選択
+    function selectGadget(taskKey) {
+      if (!GADGET_PROMPTS[taskKey]) return;
+      selectedGadget = taskKey;
+      playSound('click');
+
+      document.querySelectorAll('#stage1-cards .gadget-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.task === taskKey);
+      });
+
+      const data = GADGET_PROMPTS[taskKey];
+      document.getElementById('stage1-prompt-title').textContent = `✨ 詠唱プロンプト：${data.title}`;
+      document.getElementById('stage1-prompt-textarea').value = data.prompt;
+
+      const checksList = document.getElementById('stage1-checks');
+      checksList.innerHTML = '';
+      data.checks.forEach(chk => {
+        const li = document.createElement('li');
+        li.className = 'check-item';
+        li.innerHTML = `<label><input type="checkbox"> ${chk}</label>`;
+        checksList.appendChild(li);
+      });
+    }
+
+    // STAGE 2: 改造レシピの選択
+    function selectModRecipe(idx) {
+      selectedModIdx = idx;
+      playSound('click');
+
+      document.querySelectorAll('#stage2-mods .gadget-card').forEach(card => {
+        card.classList.toggle('selected', parseInt(card.dataset.modIdx) === idx);
+      });
+
+      const mod = MOD_RECIPES[idx];
+      document.getElementById('stage2-prompt-title').textContent = `🔧 改造指示プロンプト：${mod.title}`;
+      document.getElementById('stage2-prompt-textarea').value = mod.prompt;
+    }
+
+    // STAGE 3: ラテラル発想アイデアの選択
+    function selectLateralIdea(idx) {
+      playSound('hirameki');
+      document.querySelectorAll('#stage3-ideas .gadget-card').forEach(card => {
+        card.classList.toggle('selected', parseInt(card.dataset.lateralIdx) === idx);
+      });
+
+      const promptText = LATERAL_HINTS[idx];
+      if (promptText) {
+        document.getElementById('stage3-custom-textarea').value = promptText;
+        showToast("💡 選択したアイデアのひな形をセットしました！");
+      }
+    }
+
+    // メディア（スライド / 動画）切り替え
+    const VIDEO_STORAGE_KEY = 'DX_QUEST_VIDEO_URL_KEY';
+    const FORM_STORAGE_KEY = 'DX_QUEST_FORM_URL_KEY';
+
+    function switchMediaMode(mode) {
+      playSound('click');
+      const btnSlides = document.getElementById('btn-show-slides');
+      const btnVideo = document.getElementById('btn-show-video');
+      const slidesIframe = document.getElementById('slides-iframe');
+      const videoContainer = document.getElementById('video-frame-container');
+
+      if (mode === 'slides') {
+        btnSlides.classList.add('btn-gold', 'active');
+        btnVideo.classList.remove('btn-gold', 'active');
+        slidesIframe.style.display = 'block';
+        videoContainer.style.display = 'none';
+      } else {
+        btnVideo.classList.add('btn-gold', 'active');
+        btnSlides.classList.remove('btn-gold', 'active');
+        slidesIframe.style.display = 'none';
+        videoContainer.style.display = 'block';
+        
+        // 保存済み動画があれば読み込み
+        const savedUrl = localStorage.getItem(VIDEO_STORAGE_KEY);
+        if (savedUrl) {
+          applyVideoUrl(savedUrl);
+        }
+      }
+    }
+
+    // YouTube / Drive URL の正規化
+    function parseEmbedUrl(url) {
+      if (!url) return null;
+      url = url.trim();
+      // YouTube
+      const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+      if (ytMatch) {
+        return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&autoplay=1`;
+      }
+      // Google Drive ビューア
+      const driveMatch = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/);
+      if (driveMatch) {
+        return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+      }
+      // そのまま埋め込み可能なURL
+      if (url.startsWith('https://')) {
+        return url;
+      }
+      return null;
+    }
+
+    function applyVideoUrl(url) {
+      const embedUrl = parseEmbedUrl(url);
+      const iframe = document.getElementById('video-iframe');
+      const placeholder = document.getElementById('video-placeholder-box');
+
+      if (embedUrl) {
+        iframe.src = embedUrl;
+        iframe.style.display = 'block';
+        placeholder.style.display = 'none';
+      } else {
+        iframe.style.display = 'none';
+        placeholder.style.display = 'flex';
+      }
+    }
+
+    // 動画URL設定ダイアログ
+    function setVideoUrlPrompt() {
+      playSound('click');
+      const current = localStorage.getItem(VIDEO_STORAGE_KEY) || "";
+      const input = prompt("🎬 解説動画（YouTube、Google Drive、Vids）のURLを入力してください：", current);
+      if (input !== null) {
+        const trimmed = input.trim();
+        if (trimmed) {
+          localStorage.setItem(VIDEO_STORAGE_KEY, trimmed);
+          applyVideoUrl(trimmed);
+          showToast("🎬 動画URLをセットしました！");
+        } else {
+          localStorage.removeItem(VIDEO_STORAGE_KEY);
+          applyVideoUrl("");
+          showToast("動画設定をリセットしました");
+        }
+      }
+    }
+
+    // GoogleフォームURLの読み込みプロンプト
+    function loadFormPrompt() {
+      playSound('click');
+      const current = localStorage.getItem(FORM_STORAGE_KEY) || "";
+      const url = prompt("Googleフォームの埋め込みURL（または回答URL）を入力してください：", current || "https://docs.google.com/forms/");
+      if (url && url.startsWith("http")) {
+        localStorage.setItem(FORM_STORAGE_KEY, url.trim());
+        const iframe = document.getElementById('google-form-iframe');
+        iframe.src = url.trim();
+        document.getElementById('form-fallback').style.display = 'none';
+        showToast("🔗 Googleフォームを読み込みました！");
+      }
+    }
+
+
+    /* ==========================================================================
+       初期化
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      // 初期プロンプト展開
+      selectGadget('timer');
+      selectModRecipe(0);
+      document.getElementById('stage3-custom-textarea').value = INITIAL_CUSTOM_PROMPT;
+      document.getElementById('stage3-repair-textarea').value = INITIAL_REPAIR_PROMPT;
+      document.getElementById('gemini-brainstorm-box').value = INITIAL_BRAINSTORM_PROMPT;
+
+      // 保存済みフォームURLの復元
+      const savedFormUrl = localStorage.getItem(FORM_STORAGE_KEY);
+      if (savedFormUrl) {
+        const formIframe = document.getElementById('google-form-iframe');
+        if (formIframe) {
+          formIframe.src = savedFormUrl;
+          const fallback = document.getElementById('form-fallback');
+          if (fallback) fallback.style.display = 'none';
+        }
+      }
+
+      // 上部ナビボタンイベント
+      document.querySelectorAll('.stage-nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchStage(parseInt(btn.dataset.stage));
+        });
+      });
+
+      // STAGE 1 カード選択イベント
+      document.querySelectorAll('#stage1-cards .gadget-card').forEach(card => {
+        card.addEventListener('click', () => {
+          selectGadget(card.dataset.task);
+        });
+      });
+
+      // STAGE 1 ボタン
+      document.getElementById('btn-copy-stage1').addEventListener('click', () => {
+        const text = document.getElementById('stage1-prompt-textarea').value;
+        copyText(text, "💡 秘密道具プロンプトをコピー！Geminiに貼り付けてみよう！");
+      });
+      document.getElementById('btn-reset-stage1').addEventListener('click', () => {
+        playSound('reset');
+        document.getElementById('stage1-prompt-textarea').value = GADGET_PROMPTS[selectedGadget].prompt;
+        showToast("🔄 初期ひな形に復活させました！");
+      });
+
+      // STAGE 2 カード選択イベント
+      document.querySelectorAll('#stage2-mods .gadget-card').forEach(card => {
+        card.addEventListener('click', () => {
+          selectModRecipe(parseInt(card.dataset.modIdx));
+        });
+      });
+
+      // STAGE 2 ボタン
+      document.getElementById('btn-copy-stage2').addEventListener('click', () => {
+        const text = document.getElementById('stage2-prompt-textarea').value;
+        copyText(text, "💡 改造指示プロンプトをコピー！制作中のチャットに送信！");
+      });
+      document.getElementById('btn-reset-stage2').addEventListener('click', () => {
+        playSound('reset');
+        document.getElementById('stage2-prompt-textarea').value = MOD_RECIPES[selectedModIdx].prompt;
+        showToast("🔄 改造ひな形に復活させました！");
+      });
+
+      // STAGE 3 カード選択イベント
+      document.querySelectorAll('#stage3-ideas .gadget-card').forEach(card => {
+        card.addEventListener('click', () => {
+          selectLateralIdea(parseInt(card.dataset.lateralIdx));
+        });
+      });
+
+      // STAGE 3 自作ボタン
+      document.getElementById('btn-copy-stage3').addEventListener('click', () => {
+        const text = document.getElementById('stage3-custom-textarea').value;
+        copyText(text, "💡 自作プロンプトをコピー！Geminiで錬成しよう！");
+      });
+      document.getElementById('btn-reset-stage3').addEventListener('click', () => {
+        playSound('reset');
+        document.getElementById('stage3-custom-textarea').value = INITIAL_CUSTOM_PROMPT;
+        showToast("🔄 自作ひな形に復活させました！");
+      });
+
+      // STAGE 3 修正ボタン
+      document.getElementById('btn-copy-repair').addEventListener('click', () => {
+        const text = document.getElementById('stage3-repair-textarea').value;
+        copyText(text, "🔧 修正プロンプトをコピーしました！");
+      });
+      document.getElementById('btn-reset-repair').addEventListener('click', () => {
+        playSound('reset');
+        document.getElementById('stage3-repair-textarea').value = INITIAL_REPAIR_PROMPT;
+        showToast("🔄 修正ひな形に復活させました！");
+      });
+
+      // STAGE 3 壁打ちボタン
+      document.getElementById('btn-copy-brainstorm').addEventListener('click', () => {
+        const text = document.getElementById('gemini-brainstorm-box').value;
+        copyText(text, "💡 発想壁打ちプロンプトをコピー！Geminiに相談してみよう！");
+      });
+      document.getElementById('btn-reset-brainstorm').addEventListener('click', () => {
+        playSound('reset');
+        document.getElementById('gemini-brainstorm-box').value = INITIAL_BRAINSTORM_PROMPT;
+        showToast("🔄 壁打ちひな形に復活させました！");
+      });
+
+      // 下部固定コマンドバー
+      document.getElementById('cmd-video').addEventListener('click', () => switchStage(0));
+      document.getElementById('cmd-gadget').addEventListener('click', () => switchStage(1));
+      document.getElementById('cmd-mod').addEventListener('click', () => switchStage(2));
+      document.getElementById('cmd-lab').addEventListener('click', () => switchStage(3));
+      document.getElementById('cmd-report').addEventListener('click', () => switchStage(5));
+    });
+  </script>
+</body>
+</html>
